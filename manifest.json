@@ -1,0 +1,10 @@
+{
+  "id": "mood-calendar",
+  "name": "Mood Calendar",
+  "version": "1.0.0",
+  "minAppVersion": "0.15.0",
+  "description": "Calendar view of your daily notes, with a mood emoji displayed beneath. 以日历视图展示你的日记，并在下方显示心情 emoji。",
+  "author": "Xzhi",
+  "authorUrl": "https://github.com/GitHub-Xzhi/",
+  "isDesktopOnly": false
+}

@@ -1,0 +1,300 @@
+/* ===== Mood Calendar Plugin ===== */
+
+.mood-calendar-view {
+    padding: 4px 10px 10px;
+    font-size: 13px;
+    width: 100%;
+}
+
+/* 顶部标题栏 */
+.mood-calendar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 4px 0;
+}
+
+.mood-calendar-title {
+    font-weight: 700;
+    font-size: 16px;
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+.mood-title-year {
+    color: var(--interactive-accent);
+}
+
+.mood-title-month {
+    color: var(--text-normal);
+}
+
+.mood-calendar-nav {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.mood-calendar-nav button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 2px 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    border-radius: 4px;
+    line-height: 1;
+}
+
+.mood-calendar-nav button:hover {
+    background: var(--background-modifier-hover);
+    color: var(--text-normal);
+}
+
+.mood-today-btn {
+    font-size: 12px !important;
+    padding: 2px 10px !important;
+}
+
+/* 星期行 */
+.mood-calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(32px, 1fr));
+    gap: 2px;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 11px;
+    margin-bottom: 4px;
+    padding: 2px 0;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: min-content;
+}
+
+/* 可滚动容器 */
+.mood-calendar-scroll-container {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--text-faint) var(--background-secondary);
+}
+
+/* 强制显示水平滚动条 */
+.mood-calendar-scroll-container::-webkit-scrollbar {
+    height: 8px;
+    display: block !important;
+}
+
+.mood-calendar-scroll-container::-webkit-scrollbar-track {
+    background: var(--background-secondary);
+    border-radius: 4px;
+    display: block !important;
+}
+
+.mood-calendar-scroll-container::-webkit-scrollbar-thumb {
+    background: var(--text-faint);
+    border-radius: 4px;
+    display: block !important;
+}
+
+.mood-calendar-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: var(--text-muted);
+}
+
+/* 日期网格 */
+.mood-calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(32px, 1fr));
+    gap: 2px;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: min-content;
+}
+
+.mood-calendar-day {
+    min-height: 48px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    align-items: center;
+    justify-items: center;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    transition: background 0.15s;
+    padding: 2px;
+    box-sizing: border-box;
+}
+
+.mood-calendar-day:hover {
+    background: var(--background-modifier-hover);
+}
+
+.mood-calendar-day.other-month {
+    opacity: 0.4;
+}
+
+.mood-calendar-day.today {
+    outline: 2px solid var(--mood-calendar-today-border);
+    outline-offset: -2px;
+    background: var(--mood-calendar-today-bg);
+}
+
+.mood-calendar-day.active {
+    outline: 2px solid var(--mood-calendar-active-border);
+    outline-offset: -2px;
+    background: var(--mood-calendar-active-bg);
+}
+
+.mood-day-number {
+    font-size: clamp(9px, 1.5vw, 10px);
+    color: var(--text-muted);
+    line-height: 1;
+    margin-bottom: 2px;
+    text-align: center;
+}
+
+.mood-emoji {
+    font-size: clamp(14px, 2vw, 18px);
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 2px;
+}
+
+/* 日期状态指示点 */
+.mood-dot-container {
+    display: flex;
+    justify-content: center;
+    gap: 1px;
+    line-height: 5px;
+    height: 8px;
+    margin-top: 2px;
+}
+
+.mood-dot {
+    width: var(--mood-calendar-dot-size, 4px);
+    height: var(--mood-calendar-dot-size, 4px);
+    border-radius: 50%;
+}
+
+.mood-dot.filled {
+    background: var(--mood-calendar-dot-filled);
+}
+
+.mood-dot.hollow {
+    background: none;
+    border: 1.5px solid var(--mood-calendar-dot-hollow);
+}
+
+/* 代码块渲染 */
+.mood-calendar-block {
+    padding: 8px 0;
+}
+
+/* 心情管理界面布局 */
+.mood-calendar-settings .setting-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mood-calendar-settings .setting-item-info:empty {
+    display: none;
+}
+
+.mood-calendar-settings .setting-item-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin-right: 0;
+}
+
+.mood-calendar-settings .setting-item-description {
+    white-space: normal;
+    word-break: break-word;
+}
+
+.mood-calendar-settings .setting-item-control {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    justify-content: flex-end;
+}
+
+/* Frontmatter 字段名 / 日记文件夹输入框宽度 */
+.mood-calendar-settings .mood-text-setting input[type="text"] {
+    flex: 0 0 auto;
+    width: 180px;
+}
+
+/* 颜色输入框宽度 */
+.mood-calendar-settings .mood-color-setting input[type="text"] {
+    flex: 0 0 auto;
+    width: 200px;
+}
+
+/* 每周起始日下拉框宽度 */
+.mood-calendar-settings .mood-dropdown-setting select {
+    flex: 0 0 auto;
+    width: 110px;
+}
+
+/* 心情选项：隐藏空 info，输入框撑满 */
+.mood-calendar-settings .mood-option-setting .setting-item-info {
+    display: none !important;
+}
+
+.mood-calendar-settings .mood-option-setting .setting-item-control {
+    flex: 1 1 0;
+}
+
+.mood-calendar-settings .mood-option-setting input[type="text"] {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* 心情显示字符数输入框宽度 */
+.mood-calendar-settings .mood-display-length-setting input[type="text"] {
+    flex: 0 0 auto;
+    width: 80px;
+}
+
+.mood-calendar-settings .setting-item-control .clickable-icon {
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 心情选择弹窗按钮 */
+.mood-selection-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 12px 0;
+}
+
+.mood-selection-btn {
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-normal);
+    transition: background 0.15s;
+}
+
+.mood-selection-btn:hover {
+    background: var(--background-modifier-hover);
+    border-color: var(--interactive-accent);
+}
