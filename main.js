@@ -1352,6 +1352,7 @@ class MoodCalendarPlugin extends obsidian.Plugin {
         await this.loadSettings();
 
         this._refreshTimer = null;
+        this._isUnloaded = false;
         this.registerView(VIEW_TYPE_MOOD, (leaf) => new MoodCalendarView(leaf, this));
 
         this.addRibbonIcon('smile', t('viewTitle'), () => this.activateView());
@@ -1398,9 +1399,18 @@ class MoodCalendarPlugin extends obsidian.Plugin {
         this.addSettingTab(new MoodCalendarSettingTab(this.app, this));
 
         // 启动时自动在右侧边栏显示日历
-        this.app.workspace.onLayoutReady(() => {
-            if (this.app.workspace.getLeavesOfType(VIEW_TYPE_MOOD).length === 0) {
-                this.activateView();
+        // 修复：延迟插件（比如：plugin-manager）延迟加载时，Obsidian 恢复 workspace.json 中已保存的视图
+        // 与本插件的自动创建存在时序竞争，导致右侧边栏重复创建图标。
+        // 因此改为多次延迟检查：先去重，再复用待恢复标签页，最后才新建。
+        var self = this;
+        this.app.workspace.onLayoutReady(function () {
+            self._syncSidebarView();
+            var delays = [500, 1500, 3000];
+            for (var i = 0; i < delays.length; i++) {
+                (function (delay) {
+                    var timer = window.setTimeout(function () { self._syncSidebarView(); }, delay);
+                    self.register(function () { window.clearTimeout(timer); });
+                })(delays[i]);
             }
         });
 
@@ -1442,18 +1452,117 @@ class MoodCalendarPlugin extends obsidian.Plugin {
     }
 
     onunload() {
+        this._isUnloaded = true;
         this.app.workspace.detachLeavesOfType(VIEW_TYPE_MOOD);
     }
 
     async activateView() {
         var existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_MOOD);
+        if (existing.length > 1) {
+            this._dedupeLeaves(existing);
+            existing = this.app.workspace.getLeavesOfType(VIEW_TYPE_MOOD);
+        }
         if (existing.length > 0) {
             this.app.workspace.revealLeaf(existing[0]);
-            existing[0].view._render();
+            if (existing[0].view && existing[0].view._render) existing[0].view._render();
             return;
         }
-        var leaf = this.app.workspace.getRightLeaf(false);
+        // 优先复用 workspace 中待恢复的标签页（延迟加载场景）
+        var pending = this._findPendingLeaf();
+        var leaf = pending || this.app.workspace.getRightLeaf(false);
         await leaf.setViewState({ type: VIEW_TYPE_MOOD, active: true });
+    }
+
+    /**
+     * 同步右侧边栏视图：去重 → 复用待恢复标签页 → 按需创建
+     */
+    _syncSidebarView() {
+        if (this._isUnloaded) return;
+        var leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_MOOD);
+
+        // 修复：如果出现重复标签页，只保留一个
+        if (leaves.length > 1) {
+            var keep = this._dedupeLeaves(leaves);
+            if (keep && keep.view && keep.view._render) keep.view._render();
+            return;
+        }
+
+        // 已有且唯一，无需操作
+        if (leaves.length === 1) return;
+
+        // 尚无视图：优先复用 workspace.json 恢复出的待注册标签页
+        var pending = this._findPendingLeaf();
+        if (pending) {
+            pending.setViewState({ type: VIEW_TYPE_MOOD, active: false });
+            return;
+        }
+
+        this.activateView();
+    }
+
+    /**
+     * 去重：保留右侧边栏中的标签页（或活动标签页），其余 detach
+     */
+    _dedupeLeaves(leaves) {
+        if (!leaves || leaves.length <= 1) return leaves ? leaves[0] : null;
+        var activeLeaf = this.app.workspace.activeLeaf;
+        var keep = null;
+        var self = this;
+
+        // 优先保留右侧边栏中的标签页
+        for (var i = 0; i < leaves.length; i++) {
+            if (self._isInRightSplit(leaves[i])) { keep = leaves[i]; break; }
+        }
+        // 其次保留当前活动标签页
+        if (!keep && activeLeaf && leaves.indexOf(activeLeaf) !== -1) {
+            keep = activeLeaf;
+        }
+        // 否则保留第一个
+        if (!keep) keep = leaves[0];
+
+        for (var j = 0; j < leaves.length; j++) {
+            if (leaves[j] !== keep) leaves[j].detach();
+        }
+        return keep;
+    }
+
+    /**
+     * 查找尚未实例化但视图状态为 mood-calendar 的待恢复标签页
+     * （延迟加载时 workspace.json 恢复出的 pending leaf）
+     */
+    _findPendingLeaf() {
+        var found = null;
+        function walk(node) {
+            if (found || !node) return;
+            if (node.children) {
+                for (var i = 0; i < node.children.length; i++) walk(node.children[i]);
+                return;
+            }
+            if (typeof node.getViewState !== 'function') return;
+            if (node.view) return; // 已实例化的由 getLeavesOfType 处理
+            try {
+                var st = node.getViewState();
+                if (st && st.type === VIEW_TYPE_MOOD) found = node;
+            } catch (e) { /* ignore */ }
+        }
+        // 优先搜索右侧边栏
+        walk(this.app.workspace.rightSplit);
+        // 再搜索整个工作区
+        if (!found) walk(this.app.workspace.rootSplit);
+        return found;
+    }
+
+    /**
+     * 判断标签页是否在右侧边栏中
+     */
+    _isInRightSplit(leaf) {
+        var rightSplit = this.app.workspace.rightSplit;
+        var node = leaf;
+        while (node) {
+            if (node === rightSplit) return true;
+            node = node.parent;
+        }
+        return false;
     }
 
     async loadSettings() {
